@@ -13,6 +13,7 @@ class ViewController: UIViewController {
     let tableView = TableView()
     
     var rowCount = 0
+    var selectedIndex = 3
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,6 +22,7 @@ class ViewController: UIViewController {
         
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.dataSource = self
+        tableView.allowsSelection = false
         fillToolBar()
                 
         layout()
@@ -33,7 +35,6 @@ class ViewController: UIViewController {
         toolBar.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         toolBar.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         toolBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
-        toolBar.heightAnchor.constraint(equalToConstant: 50).isActive = true
         
         tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
         tableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
@@ -42,10 +43,13 @@ class ViewController: UIViewController {
     }
     
     func fillToolBar() {
-        let add = UIBarButtonItem(image: UIImage.init(systemName: "plus"), style: .plain, target: self, action: #selector(addItem))
+        let add = UIBarButtonItem(image: UIImage(systemName: "plus"), style: .plain, target: self, action: #selector(addItem))
         
-        let remove = UIBarButtonItem(image: UIImage.init(systemName: "minus"), style: .plain, target: self, action: #selector(removeItem))
-        toolBar.setItems([add, remove], animated: false)
+        let remove = UIBarButtonItem(image: UIImage(systemName: "minus"), style: .plain, target: self, action: #selector(removeItem))
+        
+        let move = UIBarButtonItem(image: UIImage(systemName: "bonjour"), style: .plain, target: self, action: #selector(moveItem))
+        
+        toolBar.setItems([add, remove, move], animated: false)
     }
     
     @objc func addItem() {
@@ -66,6 +70,42 @@ class ViewController: UIViewController {
             tableView.deleteRows(at: [index], with: .fade)
         }
     }
+    
+    @objc func moveItem() {
+        let oldIndexPath = IndexPath(row: selectedIndex, section: 0)
+        
+        var startFrame: CGRect?
+        var finishFrame: CGRect?
+        
+        if let cell = tableView.cellForRow(at: oldIndexPath) {
+            cell.imageView?.image = UIImage(systemName: "circle")
+            cell.imageView?.tintColor = .clear
+            startFrame = cell.convert(cell.imageView!.frame, to: tableView)
+        }
+        selectedIndex = (0 ..< rowCount).randomElement() ?? -1
+        
+        let newIndexPath = IndexPath(row: selectedIndex, section: 0)
+        let finishCell: UITableViewCell?
+        if let cell = tableView.cellForRow(at: newIndexPath) {
+            finishFrame = cell.convert(cell.imageView!.frame, to: tableView)
+            finishCell = cell
+        } else {
+            finishCell = nil
+        }
+        
+        guard let startFrame, let finishFrame else { return }
+        let movingView = UIImageView(image: UIImage(systemName: "tram.circle"))
+        movingView.frame = startFrame
+        movingView.tintColor = .red
+        tableView.addSubview(movingView)
+        UIView.animate(withDuration: 3, delay: 0) {
+            movingView.frame = finishFrame
+        } completion: { _ in
+            finishCell?.imageView?.image = UIImage(systemName: "tram.circle")
+            finishCell?.imageView?.tintColor = .red
+            movingView.removeFromSuperview()
+        }
+    }
 }
 
 extension ViewController: UITableViewDataSource {
@@ -77,6 +117,13 @@ extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         cell.textLabel?.text = "Row #\(indexPath.row)"
+        if indexPath.row == selectedIndex {
+            cell.imageView?.image = UIImage(systemName: "tram.circle")
+            cell.imageView?.tintColor = .red
+        } else {
+            cell.imageView?.image = UIImage(systemName: "circle")
+            cell.imageView?.tintColor = .clear
+        }
         return cell
     }
 }
