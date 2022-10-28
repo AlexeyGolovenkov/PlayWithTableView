@@ -49,7 +49,9 @@ class ViewController: UIViewController {
         
         let move = UIBarButtonItem(image: UIImage(systemName: "bonjour"), style: .plain, target: self, action: #selector(moveItem))
         
-        toolBar.setItems([add, remove, move], animated: false)
+        let reload = UIBarButtonItem(image: UIImage(systemName: "arrow.3.trianglepath"), style: .plain, target: self, action: #selector(reloadItem))
+        
+        toolBar.setItems([add, remove, move, reload], animated: false)
     }
     
     @objc func addItem() {
@@ -69,6 +71,12 @@ class ViewController: UIViewController {
         tableView.performBatchUpdates {
             tableView.deleteRows(at: [index], with: .fade)
         }
+    }
+    
+    @objc func reloadItem() {
+        rowCount = 50
+        tableView.reloadData()
+        tableView.scrollToRow(at: IndexPath(row: rowCount - 1, section: 0), at: .bottom, animated: false)
     }
     
     @objc func moveItem() {
